@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опросник СодружестВО</title>
+    <style>
+        :root {
+            --bg-dark: #080c09;
+            --panel-bg: #101712;
+            --input-bg: #0a100c;
+            --border-color: #213025;
+            --neon-green: #39ff88;
+            --neon-dim: rgba(57, 255, 136, 0.14);
+            --text-main: #e6f0e8;
+            --text-muted: #768c7b;
+            --danger: #ff4d4d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 16px 0 16px;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(57, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(57, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 36px 36px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(57, 255, 136, 0.18), transparent);
+            animation: scanline 7s linear infinite;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-10vh); }
+            100% { transform: translateY(110vh); }
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(16px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes neonFlicker {
+            0%, 100% {
+                text-shadow: 0 0 10px rgba(57, 255, 136, 0.8), 0 0 24px rgba(57, 255, 136, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 6px rgba(57, 255, 136, 0.5), 0 0 14px rgba(57, 255, 136, 0.3);
+            }
+        }
+
+        .main-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            position: relative;
+            background: var(--panel-bg);
+            width: 100%;
+            max-width: 560px;
+            padding: 36px 32px;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(57, 255, 136, 0.04);
+            animation: cardAppear 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 24px;
+            right: 24px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+            opacity: 0.75;
+        }
+
+        #welcomeStep {
+            text-align: center;
+            padding: 12px 0;
+        }
+
+        .brand-title {
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 12px 0 12px 0;
+            user-select: none;
+        }
+
+        .brand-title .neon-part {
+            color: var(--neon-green);
+            animation: neonFlicker 3s ease-in-out infinite;
+        }
+
+        .welcome-sub {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 0 0 30px 0;
+        }
+
+        #surveyContainer {
+            display: none;
+            animation: fadeIn 0.35s ease forwards;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .progress-percent {
+            color: var(--neon-green);
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: #17221a;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--neon-green);
+            box-shadow: 0 0 10px rgba(57, 255, 136, 0.6);
+            transition: width 0.35s ease;
+        }
+
+        .step-title {
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 19px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .survey-step {
+            display: none;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .survey-step.active {
+            display: block;
+        }
+
+        .field-group {
+            margin-bottom: 20px;
+        }
+
+        label.field-label {
+            display: block;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .req {
+            color: var(--danger);
+            margin-left: 3px;
+        }
+
+        .field-hint {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: -4px 0 10px 0;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 13px 15px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 14.5px;
+            transition: all 0.25s ease;
+        }
+
+        input[type="date"] {
+            color-scheme: dark;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 84px;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #3d5242;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--neon-green);
+            background-color: #0d1610;
+            box-shadow: 0 0 0 3px var(--neon-dim);
+        }
+
+        select option {
+            background-color: #101712;
+            color: #ffffff;
+        }
+
+        .sub-panel {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(57, 255, 136, 0.04);
+            border: 1px solid rgba(57, 255, 136, 0.22);
+            border-radius: 14px;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .sub-panel.visible {
+            display: block;
+        }
+
+        .sub-panel label {
+            color: var(--neon-green);
+        }
+
+        #childrenInputsContainer .child-row {
+            margin-top: 14px;
+            animation: fadeIn 0.25s ease forwards;
+        }
+
+        #childrenInputsContainer .child-row label {
+            color: var(--neon-green);
+            font-size: 12.5px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .cat-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .cat-item:hover {
+            border-color: rgba(57, 255, 136, 0.5);
+            background: #0d1610;
+        }
+
+        .cat-item input[type="checkbox"] {
+            accent-color: var(--neon-green);
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .option-item:hover {
+            border-color: rgba(57, 255, 136, 0.5);
+            background: #0d1610;
+        }
+
+        .option-item input[type="radio"],
+        .option-item input[type="checkbox"] {
+            accent-color: var(--neon-green);
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        #dynamicContactsContainer {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .contact-sub-field {
+            display: none;
+            padding: 14px;
+            background: rgba(57, 255, 136, 0.03);
+            border: 1px solid rgba(57, 255, 136, 0.2);
+            border-radius: 12px;
+            animation: fadeIn 0.25s ease forwards;
+        }
+
+        .contact-sub-field.visible {
+            display: block;
+        }
+
+        .contact-sub-field label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--neon-green);
+            margin-bottom: 8px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 26px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: rgba(57, 255, 136, 0.14);
+            border: 1px solid var(--neon-green);
+            border-radius: 12px;
+            color: var(--neon-green);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--neon-green);
+            color: #060b07;
+            box-shadow: 0 0 22px rgba(57, 255, 136, 0.4);
+            transform: translateY(-1px);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button.btn-secondary {
+            background: transparent;
+            border-color: var(--border-color);
+            color: var(--text-muted);
+        }
+
+        button.btn-secondary:hover {
+            background: #17221a;
+            border-color: #384f3e;
+            color: #ffffff;
+            box-shadow: none;
+        }
+
+        button:disabled {
+            background: #141d17;
+            border-color: #26362b;
+            color: #556b5b;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+            display: none;
+        }
+
+        #confirmStep {
+            display: none;
+            animation: fadeIn 0.35s ease forwards;
+        }
+
+        .notice-box {
+            background: rgba(57, 255, 136, 0.07);
+            border: 1px solid rgba(57, 255, 136, 0.35);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: inset 0 0 18px rgba(57, 255, 136, 0.05);
+        }
+
+        .notice-title {
+            color: var(--neon-green);
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notice-text {
+            color: #e6f0e8;
+            font-size: 14px;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        .notice-text strong {
+            color: var(--neon-green);
+        }
+
+        footer {
+            width: 100%;
+            max-width: 900px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        footer span strong {
+            color: var(--neon-green);
+            font-weight: 600;
+        }
+
+        @media (max-width: 520px) {
+            .card {
+                padding: 28px 20px;
+            }
+            .categories-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            footer {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <div class="card">
+            <!-- Экран 0: Приветственное окно -->
+            <div id="welcomeStep">
+                <h1 class="brand-title"><span class="neon-part">С</span>одружест<span class="neon-part">ВО</span></h1>
+                <p class="welcome-sub">Анкета участника и волонтёра сообщества</p>
+                <button type="button" id="startBtn">Заполнить анкету</button>
+            </div>
+
+            <!-- Основной контейнер многошаговой анкеты -->
+            <div id="surveyContainer">
+                <div id="progressArea">
+                    <div class="progress-header">
+                        <span id="stepCounterText">Шаг 1 из 5</span>
+                        <span class="progress-percent" id="stepPercentText">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <form id="fullSurveyForm" novalidate>
+                    <!-- ШАГ 1: Основная информация -->
+                    <div class="survey-step active" data-step="1">
+                        <h3 class="step-title">1. Основная информация</h3>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_fio">1. Ваше ФИО<span class="req">*</span></label>
+                            <input type="text" id="q_fio" placeholder="Иванов Иван Иванович" required autocomplete="off">
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_callsign">2. Позывной (если есть)</label>
+                            <input type="text" id="q_callsign" placeholder="Например: Сокол" autocomplete="off">
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_dob">3. Дата рождения<span class="req">*</span></label>
+                            <input type="text" inputmode="numeric" id="q_dob" maxlength="10" placeholder="ДД.ММ.ГГГГ (например: 15.05.1995)" required autocomplete="off">
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_education">4. Образование<span class="req">*</span></label>
+                            <select id="q_education" required>
+                                <option value="" disabled selected>Выберите уровень...</option>
+                                <option value="9 классов">9 классов</option>
+                                <option value="11 классов">11 классов</option>
+                                <option value="СПО (колледж / техникум)">СПО (колледж / техникум)</option>
+                                <option value="Незаконченное высшее">Незаконченное высшее</option>
+                                <option value="Высшее (бакалавриат)">Высшее (бакалавриат)</option>
+                                <option value="Высшее (магистратура / специалитет)">Высшее (магистратура / специалитет)</option>
+                                <option value="Другое">Другое</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_employment">5. Чем вы сейчас заняты?<span class="req">*</span></label>
+                            <select id="q_employment" required>
+                                <option value="" disabled selected>Выберите вариант...</option>
+                                <option value="Учусь">Учусь</option>
+                                <option value="Работаю">Работаю</option>
+                                <option value="Не работаю (безработный)">Не работаю (безработный)</option>
+                            </select>
+
+                            <!-- Поле для тех, кто учится -->
+                            <div id="box_study" class="sub-panel">
+                                <label class="field-label" for="inp_study">Где вы учитесь?<span class="req">*</span></label>
+                                <input type="text" id="inp_study" placeholder="Например: Школа №5, Калужский колледж..." autocomplete="off">
+                            </div>
+
+                            <!-- Поле для тех, кто работает -->
+                            <div id="box_work" class="sub-panel">
+                                <label class="field-label" for="inp_work">В какой сфере вы работаете?<span class="req">*</span></label>
+                                <input type="text" id="inp_work" placeholder="Например: строительство, IT, медицина" autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_city">6. Город проживания<span class="req">*</span></label>
+                            <input type="text" id="q_city" placeholder="Укажите город" required autocomplete="off">
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_family">7. Семейное положение<span class="req">*</span></label>
+                            <select id="q_family" required>
+                                <option value="" disabled selected>Выберите статус...</option>
+                                <option value="Мне нет 18 лет">Мне нет 18 лет</option>
+                                <option value="Не замужем / Не женат">Не замужем / Не женат</option>
+                                <option value="В браке (нет детей)">В браке (нет детей)</option>
+                                <option value="В браке (есть дети)">В браке (есть дети)</option>
+                                <option value="Один/одна воспитываю детей">Один/одна воспитываю детей</option>
+                            </select>
+
+                            <!-- Динамический блок для детей -->
+                            <div id="childrenSection" class="sub-panel">
+                                <label class="field-label" for="q_childrenCount">Количество детей:</label>
+                                <select id="q_childrenCount">
+                                    <option value="1">1 ребёнок</option>
+                                    <option value="2">2 детей</option>
+                                    <option value="3">3 детей</option>
+                                    <option value="4">4 детей</option>
+                                    <option value="5">5 детей</option>
+                                    <option value="6">6 детей</option>
+                                    <option value="7">7 детей</option>
+                                    <option value="8">8 детей</option>
+                                    <option value="9">9 детей</option>
+                                    <option value="10">10 детей</option>
+                                </select>
+                                <div id="childrenInputsContainer"></div>
+                            </div>
+                        </div>
+
+                        <div class="btn-row">
+                            <button type="button" class="next-btn">Далее</button>
+                        </div>
+                    </div>
+
+                    <!-- ШАГ 2: Контакты для связи -->
+                    <div class="survey-step" data-step="2">
+                        <h3 class="step-title">2. Контакты для связи</h3>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_phone">8. Номер телефона (Звонки/СМС)<span class="req">*</span></label>
+                            <input type="tel" id="q_phone" value="+7 (" placeholder="+7 (999) 000-00-00" maxlength="18" required autocomplete="off">
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">9. Дополнительные каналы связи (выберите удобные)</label>
+                            <span class="field-hint">Отметьте нужные пункты — откроются поля для заполнения</span>
+                            
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="checkbox" class="channel-toggle" data-target="box_tg" value="Telegram">
+                                    <span>Telegram</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" class="channel-toggle" data-target="box_max" value="МАКС">
+                                    <span>МАКС</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" class="channel-toggle" data-target="box_wa" value="WhatsApp">
+                                    <span>WhatsApp</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" class="channel-toggle" data-target="box_email" value="Электронная почта">
+                                    <span>Почта (Email)</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" class="channel-toggle" data-target="box_vk" value="ВКонтакте">
+                                    <span>ВКонтакте</span>
+                                </label>
+                            </div>
+
+                            <!-- Выпадающие поля для выбранных галочек -->
+                            <div id="dynamicContactsContainer">
+                                <div class="contact-sub-field" id="box_tg">
+                                    <label for="inp_tg">Ваш Telegram (@username)<span class="req">*</span></label>
+                                    <input type="text" id="inp_tg" placeholder="@ivanivanov" autocomplete="off">
+                                </div>
+
+                                <div class="contact-sub-field" id="box_max">
+                                    <label for="inp_max">Ваш МАКС ID или номер<span class="req">*</span></label>
+                                    <input type="text" id="inp_max" placeholder="Введите ID или ник в МАКС" autocomplete="off">
+                                </div>
+
+                                <div class="contact-sub-field" id="box_wa">
+                                    <label for="inp_wa">Номер WhatsApp<span class="req">*</span></label>
+                                    <input type="tel" id="inp_wa" value="+7 (" maxlength="18" placeholder="+7 (999) 000-00-00" autocomplete="off">
+                                </div>
+
+                                <div class="contact-sub-field" id="box_email">
+                                    <label for="inp_email">Электронная почта<span class="req">*</span></label>
+                                    <input type="email" id="inp_email" placeholder="example@mail.ru" autocomplete="off">
+                                </div>
+
+                                <div class="contact-sub-field" id="box_vk">
+                                    <label for="inp_vk">Ссылка или ID ВКонтакте<span class="req">*</span></label>
+                                    <input type="text" id="inp_vk" placeholder="vk.com/id12345 или @username" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_contactPref">10. Предпочтительный способ связи</label>
+                            <select id="q_contactPref">
+                                <option value="Написать в Telegram">Написать в Telegram</option>
+                                <option value="Написать в МАКС">Написать в МАКС</option>
+                                <option value="Написать в WhatsApp">Написать в WhatsApp</option>
+                                <option value="Написать ВКонтакте">Написать ВКонтакте</option>
+                                <option value="Написать на почту">Написать на почту</option>
+                                <option value="Позвонить по телефону">Позвонить по телефону</option>
+                            </select>
+                        </div>
+
+                        <div class="btn-row">
+                            <button type="button" class="btn-secondary prev-btn">Назад</button>
+                            <button type="button" class="next-btn">Далее</button>
+                        </div>
+                    </div>
+
+                    <!-- ШАГ 3: Опыт и возможности -->
+                    <div class="survey-step" data-step="3">
+                        <h3 class="step-title">3. Опыт и возможности</h3>
+
+                        <div class="field-group">
+                            <label class="field-label">11. Наличие водительских прав<span class="req">*</span></label>
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="radio" name="q_license" value="Нет" required>
+                                    <span>Права отсутствуют</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="q_license" value="Есть">
+                                    <span>Есть водительское удостоверение</span>
+                                </label>
+                            </div>
+
+                            <!-- Выпадающий выбор категорий при наличии прав -->
+                            <div id="licenseCategoriesBox" class="sub-panel">
+                                <label class="field-label" style="color: var(--neon-green);">Выберите открытые категории:<span class="req">*</span></label>
+                                <div class="categories-grid">
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="A"> <span>A</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="A1"> <span>A1</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="B"> <span>B</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="B1"> <span>B1</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="BE"> <span>BE</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="C"> <span>C</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="C1"> <span>C1</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="CE"> <span>CE</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="D"> <span>D</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="D1"> <span>D1</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="DE"> <span>DE</span></label>
+                                    <label class="cat-item"><input type="checkbox" name="q_lic_cat" value="M"> <span>M</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">12. Был ли у вас ранее опыт в волонтёрстве?<span class="req">*</span></label>
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="radio" name="q_exp" value="Да, занимался этим ранее" required>
+                                    <span>Да, занимался этим ранее</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="q_exp" value="Нет, это мой первый раз">
+                                    <span>Нет, это мой первый раз</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_hours">13. Сколько часов в неделю готовы уделять?</label>
+                            <input type="text" inputmode="numeric" id="q_hours" maxlength="3" placeholder="Например: 3" autocomplete="off">
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">14. В каких сферах вам интереснее помогать?</label>
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_spheres" value="Организация и проведение мероприятий">
+                                    <span>Организация и проведение мероприятий</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_spheres" value="Помощь с документами / текстами">
+                                    <span>Помощь с документами / текстами</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_spheres" value="Транспортная помощь (на авто)">
+                                    <span>Транспортная помощь (на авто)</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_spheres" value="Фотосъемка, дизайн, соцсети">
+                                    <span>Фотосъемка, дизайн, соцсети</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_spheres" value="Гуманитарная и адресная помощь">
+                                    <span>Гуманитарная и адресная помощь</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">15. Направление волонтёрской деятельности<span class="req">*</span></label>
+                            <span class="field-hint">Выберите одно или несколько направлений — выберите хотя бы одно</span>
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_directions" value="Плетение сетей">
+                                    <span>Плетение сетей</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_directions" value="Проведение тактической медицины">
+                                    <span>Проведение тактической медицины</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_directions" value="Работа жертвователем / формирование гуманитарных грузов">
+                                    <span>Работа жертвователем / формирование гуманитарных грузов</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_directions" value="Обработка запросов бойцов">
+                                    <span>Обработка запросов бойцов</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="q_directions" value="Доставка гуманитарных грузов / командировки в зоны СВО">
+                                    <span>Доставка гуманитарных грузов / командировки в зоны СВО</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="btn-row">
+                            <button type="button" class="btn-secondary prev-btn">Назад</button>
+                            <button type="button" class="next-btn">Далее</button>
+                        </div>
+                    </div>
+
+                    <!-- ШАГ 4: Навыки, сильные стороны и мотивация -->
+                    <div class="survey-step" data-step="4">
+                        <h3 class="step-title">4. Навыки, сильные стороны и мотивация</h3>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_hobbies">16. Ваши хобби и умения</label>
+                            <textarea id="q_hobbies" placeholder="Расскажите, чем любите заниматься и что умеете вне работы..."></textarea>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">17. Ваши сильные стороны</label>
+                            <span class="field-hint">Отметьте всё, что про вас</span>
+                            <div class="categories-grid">
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Творчество"> <span>Творчество</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Аналитическое мышление"> <span>Аналитика</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Физическая подготовка"> <span>Физподготовка</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Коммуникация"> <span>Общение</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Организаторские навыки"> <span>Организация</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Рукоделие и мелкая моторика"> <span>Рукоделие</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Технические навыки"> <span>Техника</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Работа с документами"> <span>Документы</span></label>
+                                <label class="cat-item"><input type="checkbox" name="q_strengths" value="Стрессоустойчивость"> <span>Стрессоустойчивость</span></label>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <label class="field-label" for="inp_strengths_other" style="color: var(--neon-green);">Другое (впишите своё):</label>
+                                <input type="text" id="inp_strengths_other" placeholder="Например: опыт стрельбы, знание языков" autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">18. Готовы ли вы участвовать в неформальных мероприятиях?<span class="req">*</span></label>
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="radio" name="q_informal" value="Да" required>
+                                    <span>Да</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="q_informal" value="Иногда">
+                                    <span>Иногда</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="q_informal" value="Нет">
+                                    <span>Нет</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_skills">19. Ваши ключевые навыки, профессия или образование</label>
+                            <textarea id="q_skills" placeholder="Расскажите, чем вы занимаетесь и что умеете лучше всего..."></textarea>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_motivation">20. Почему вы решили присоединиться к СодружестВО?<span class="req">*</span></label>
+                            <textarea id="q_motivation" placeholder="Напишите пару слов о вашей мотивации..." required></textarea>
+                        </div>
+
+                        <div class="btn-row">
+                            <button type="button" class="btn-secondary prev-btn">Назад</button>
+                            <button type="button" class="next-btn">Далее</button>
+                        </div>
+                    </div>
+
+                    <!-- ШАГ 5: Завершение -->
+                    <div class="survey-step" data-step="5">
+                        <h3 class="step-title">5. Завершение анкеты</h3>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_likes">21. Что вам нравится / не нравится в Содружестве?</label>
+                            <textarea id="q_likes" placeholder="Ваши впечатления — и то, что хотелось бы изменить..."></textarea>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_help">22. Чем Содружество может вам помочь?</label>
+                            <textarea id="q_help" placeholder="Чего вы ждёте от участия в сообществе..."></textarea>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">23. Являетесь ли вы волонтёром Содружества на «Добро.РФ»?<span class="req">*</span></label>
+                            <div class="options-list">
+                                <label class="option-item">
+                                    <input type="radio" name="q_dobro" value="Да" required>
+                                    <span>Да</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="radio" name="q_dobro" value="Нет">
+                                    <span>Нет</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_source">24. Откуда вы узнали о нас?<span class="req">*</span></label>
+                            <select id="q_source" required>
+                                <option value="" disabled selected>Выберите вариант...</option>
+                                <option value="Telegram-канал">Telegram-канал</option>
+                                <option value="От друзей / знакомых">От друзей / знакомых</option>
+                                <option value="Социальные сети (ВК, ОК и др.)">Социальные сети (ВК, ОК и др.)</option>
+                                <option value="На мероприятии">На мероприятии</option>
+                                <option value="Другое">Другое</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="q_comment">25. Дополнительный комментарий или вопросы</label>
+                            <textarea id="q_comment" placeholder="Если хотите что-то добавить, напишите здесь..."></textarea>
+                        </div>
+
+                        <div class="btn-row">
+                            <button type="button" class="btn-secondary prev-btn">Назад</button>
+                            <button type="submit">Завершить анкету</button>
+                        </div>
+                    </div>
+
+                    <div class="error-msg" id="errorMsg">Пожалуйста, корректно заполните все обязательные поля (*) на этом шаге.</div>
+                </form>
+
+                <!-- Экран предупреждения и таймера на 5 секунд -->
+                <div id="confirmStep">
+                    <div class="notice-box">
+                        <div class="notice-title">Внимание перед отправкой</div>
+                        <p class="notice-text">
+                            Не пугайтесь, сейчас откроется страница <strong>Яндекс Форм</strong> с вашими уже заполненными ответами.<br><br>
+                            Просто нажмите там кнопку <strong>«Отправить»</strong> ещё раз, чтобы завершить!
+                        </p>
+                    </div>
+
+                    <button type="button" id="finalBtn" disabled>Подождите 5 сек...</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал страницы -->
+    <footer>
+        <span>Контакт руководителя: <strong>ФИО (Заглушка)</strong></span>
+        <span>Почта: <strong>info@sodruzhestvo.ru</strong></span>
+        <span>TG-канал: <strong>@username_placeholder</strong></span>
+    </footer>
+
+    <script>
+        // ..........................................................................
+        // ССЫЛКА НА ЯНДЕКС ФОРМУ И ИДЕНТИФИКАТОРЫ ПОЛЕЙ.
+        // Все ID реальные — код готов к работе.
+        const FORM_URL = "https://forms.yandex.ru/u/6af618f32c4f898e1af554f3/";
+
+        const FIELD_IDS = {
+            fio:            "answer_short_text_9008993767886016",
+            callsign:       "answer_short_text_9008994524893976",
+            dob:            "answer_date_9008993776469580",
+            education:      "answer_short_text_9008994525228124",
+            employment:     "answer_short_text_9008994525270530",
+            study:          "answer_short_text_9008994525295962",
+            workSphere:     "answer_short_text_9008994525314276",
+            city:           "answer_short_text_9008994525349708",
+            family:         "answer_short_text_9008993774023960",
+            children:       "answer_long_text_9008993774054760",
+            phone:          "answer_phone_9008993774108712",
+            extraChannels:  "answer_long_text_9008993775731928",
+            contactPref:    "answer_short_text_9008993774129776",
+            license:        "answer_long_text_9008993776391196",
+            exp:            "answer_short_text_9008993774153156",
+            hours:          "answer_integer_9008993774216552",
+            spheres:        "answer_long_text_9008993774242588",
+            directions:     "answer_short_text_9008994526401094",
+            hobbies:        "answer_short_text_9008994526567376",
+            strengths:      "answer_short_text_9008994526544052",
+            strengthsOther: "answer_short_text_9008994526523044",
+            informal:       "answer_short_text_9008994526490512",
+            skills:         "answer_long_text_9008993774260816",
+            motivation:     "answer_long_text_9008993774279632",
+            likes:          "answer_long_text_9008993774311312",
+            help:           "answer_short_text_9008994526688584",
+            dobro:          "answer_short_text_9008994526710902",
+            source:         "answer_short_text_9008994526819540",
+            comment:        "answer_short_text_9008994526836044"
+        };
+        // ..........................................................................
+
+        let currentStep = 1;
+        const totalSteps = 5;
+        let targetLink = "";
+
+        const steps = document.querySelectorAll(".survey-step");
+        const errorMsg = document.getElementById("errorMsg");
+
+        // Переменные занятости объявляем СРАЗУ — до любого обращения к ним
+        const employmentSelect = document.getElementById("q_employment");
+        const boxStudy = document.getElementById("box_study");
+        const boxWork = document.getElementById("box_work");
+        const studyInput = document.getElementById("inp_study");
+        const workInput = document.getElementById("inp_work");
+
+        // 1. ФИО и Город: только буквы/пробел/дефис + каждое слово автоматически с большой буквы
+        function formatNameOrCity(inputEl) {
+            inputEl.addEventListener("input", function() {
+                let val = this.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s\-]/g, "");
+                val = val.replace(/(^|[\s\-])([a-zа-яё])/g, (match, sep, char) => sep + char.toUpperCase());
+                this.value = val;
+            });
+        }
+        formatNameOrCity(document.getElementById("q_fio"));
+        formatNameOrCity(document.getElementById("q_city"));
+
+        // Позывной: буквы, цифры, дефис, без пробелов
+        document.getElementById("q_callsign").addEventListener("input", function() {
+            this.value = this.value.replace(/[^a-zA-Zа-яА-ЯёЁ0-9\-]/g, "");
+        });
+
+        // Учебное заведение и сфера работы: буквы, цифры, № и знаки препинания
+        [studyInput, workInput].forEach(function(inputEl) {
+            inputEl.addEventListener("input", function() {
+                let val = this.value.replace(/[^a-zA-Zа-яА-ЯёЁ0-9\s№.,\-()"]/g, "");
+                val = val.replace(/(^|[\s\-])([a-zа-яё])/g, (match, sep, char) => sep + char.toUpperCase());
+                this.value = val;
+            });
+        });
+
+        // 2. Длинные текстовые поля: автоматически первая буква текста и после точки с большой буквы
+        function formatSentenceCase(textareaEl) {
+            textareaEl.addEventListener("input", function() {
+                let val = this.value;
+                val = val.replace(/(^\s*|[.!?]\s+)([a-zа-яё])/g, (match, sep, char) => sep + char.toUpperCase());
+                this.value = val;
+            });
+        }
+        formatSentenceCase(document.getElementById("q_hobbies"));
+        formatSentenceCase(document.getElementById("q_skills"));
+        formatSentenceCase(document.getElementById("q_motivation"));
+        formatSentenceCase(document.getElementById("q_likes"));
+        formatSentenceCase(document.getElementById("q_help"));
+        formatSentenceCase(document.getElementById("q_comment"));
+
+        // 3. Авто-маска даты рождения ДД.ММ.ГГГГ и конвертация в ГГГГ-ММ-ДД для Яндекс Форм
+        const dobInput = document.getElementById("q_dob");
+        dobInput.addEventListener("input", function() {
+            let digits = this.value.replace(/\D/g, "").substring(0, 8);
+            let formatted = "";
+            if (digits.length > 0) formatted += digits.substring(0, 2);
+            if (digits.length >= 3) formatted += "." + digits.substring(2, 4);
+            if (digits.length >= 5) formatted += "." + digits.substring(4, 8);
+            this.value = formatted;
+        });
+
+        function parseAndValidateDob(dobStr) {
+            const match = dobStr.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+            if (!match) return null;
+            const day = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10);
+            const year = parseInt(match[3], 10);
+
+            if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+            const currentYear = new Date().getFullYear();
+            if (year < 1920 || year > currentYear - 10) return null;
+
+            const dateObj = new Date(year, month - 1, day);
+            if (dateObj.getFullYear() !== year || dateObj.getMonth() !== month - 1 || dateObj.getDate() !== day) {
+                return null;
+            }
+
+            const today = new Date();
+            let age = today.getFullYear() - year;
+            const mDiff = today.getMonth() - (month - 1);
+            if (mDiff < 0 || (mDiff === 0 && today.getDate() < day)) {
+                age--;
+            }
+            if (age < 10 || age > 110) return null;
+
+            const isoDate = `${match[3]}-${match[2]}-${match[1]}`;
+            return { formatted: dobStr, isoDate, age };
+        }
+
+        // 4. Часы: только цифры
+        const hoursInput = document.getElementById("q_hours");
+        hoursInput.addEventListener("input", function() {
+            this.value = this.value.replace(/\D/g, "");
+        });
+
+        // 5. Телефоны (основной + WhatsApp): авто-маска +7 (XXX) XXX-XX-XX
+        function setupPhoneMask(inputEl) {
+            function formatPhone(rawVal) {
+                let digits = rawVal.replace(/\D/g, "");
+                if (digits.startsWith("7") || digits.startsWith("8")) {
+                    digits = digits.substring(1);
+                }
+                digits = digits.substring(0, 10);
+
+                let result = "+7 (";
+                if (digits.length > 0) result += digits.substring(0, 3);
+                if (digits.length >= 3) result += ") " + digits.substring(3, 6);
+                if (digits.length >= 6) result += "-" + digits.substring(6, 8);
+                if (digits.length >= 8) result += "-" + digits.substring(8, 10);
+                return result;
+            }
+
+            inputEl.addEventListener("focus", function() {
+                if (!this.value || this.value.length < 4) this.value = "+7 (";
+            });
+
+            inputEl.addEventListener("input", function() {
+                this.value = formatPhone(this.value);
+            });
+
+            inputEl.addEventListener("keydown", function(e) {
+                if ((e.key === "Backspace" || e.key === "Delete") && this.selectionStart <= 4 && this.selectionEnd <= 4) {
+                    e.preventDefault();
+                }
+            });
+        }
+        setupPhoneMask(document.getElementById("q_phone"));
+        setupPhoneMask(document.getElementById("inp_wa"));
+
+        // 6. Telegram: при вводе автоматически ставим @ в начале
+        const tgInput = document.getElementById("inp_tg");
+        tgInput.addEventListener("input", function() {
+            let val = this.value.replace(/\s+/g, "");
+            val = val.replace(/^https?:\/\/(t\.me|telegram\.me)\//i, "");
+            val = val.replace(/[^a-zA-Z0-9_@]/g, "");
+            val = val.replace(/@/g, "");
+            this.value = val.length > 0 ? "@" + val : "";
+        });
+
+        // 7. Почта: запрещаем русские буквы и пробелы
+        const emailInput = document.getElementById("inp_email");
+        emailInput.addEventListener("input", function() {
+            this.value = this.value.replace(/[^a-zA-Z0-9@._\-+]/g, "");
+        });
+
+        // 8. МАКС и ВК: убираем пробелы
+        const maxInput = document.getElementById("inp_max");
+        maxInput.addEventListener("input", function() {
+            this.value = this.value.replace(/\s+/g, "");
+        });
+
+        const vkInput = document.getElementById("inp_vk");
+        vkInput.addEventListener("input", function() {
+            this.value = this.value.replace(/\s+/g, "");
+        });
+
+        // Логика галочек каналов связи
+        document.querySelectorAll(".channel-toggle").forEach(checkbox => {
+            checkbox.addEventListener("change", function() {
+                const targetBox = document.getElementById(this.dataset.target);
+                const innerInput = targetBox.querySelector("input");
+                if (this.checked) {
+                    targetBox.classList.add("visible");
+                    innerInput.setAttribute("required", "required");
+                    if (innerInput.id === "inp_wa" && (!innerInput.value || innerInput.value.length < 4)) {
+                        innerInput.value = "+7 (";
+                    }
+                } else {
+                    targetBox.classList.remove("visible");
+                    innerInput.removeAttribute("required");
+                    innerInput.style.borderColor = "";
+                }
+            });
+        });
+
+        // Логика занятости (Шаг 1): учусь / работаю / не работаю
+        employmentSelect.addEventListener("change", function() {
+            const val = this.value;
+            boxStudy.classList.remove("visible");
+            boxWork.classList.remove("visible");
+            studyInput.removeAttribute("required");
+            workInput.removeAttribute("required");
+            studyInput.style.borderColor = "";
+            workInput.style.borderColor = "";
+
+            if (val === "Учусь") {
+                boxStudy.classList.add("visible");
+                studyInput.setAttribute("required", "required");
+            } else if (val === "Работаю") {
+                boxWork.classList.add("visible");
+                workInput.setAttribute("required", "required");
+            }
+        });
+
+        // Логика водительских прав (Шаг 3)
+        const licenseCategoriesBox = document.getElementById("licenseCategoriesBox");
+        document.querySelectorAll('input[name="q_license"]').forEach(radio => {
+            radio.addEventListener("change", function() {
+                if (this.value === "Есть") {
+                    licenseCategoriesBox.classList.add("visible");
+                } else {
+                    licenseCategoriesBox.classList.remove("visible");
+                    document.querySelectorAll('input[name="q_lic_cat"]').forEach(cb => cb.checked = false);
+                }
+            });
+        });
+
+        // Переход с приветствия на Шаг 1
+        document.getElementById("startBtn").onclick = function() {
+            document.getElementById("welcomeStep").style.display = "none";
+            document.getElementById("surveyContainer").style.display = "block";
+            updateProgress();
+        };
+
+        // Логика отображения блока детей
+        const familySelect = document.getElementById("q_family");
+        const childrenSection = document.getElementById("childrenSection");
+        const childrenCountSelect = document.getElementById("q_childrenCount");
+        const childrenInputsContainer = document.getElementById("childrenInputsContainer");
+
+        function renderChildrenInputs(count) {
+            childrenInputsContainer.innerHTML = "";
+            for (let i = 1; i <= count; i++) {
+                const row = document.createElement("div");
+                row.className = "child-row";
+                row.innerHTML = `
+                    <label class="field-label" for="child_${i}">Ребёнок №${i} (Имя, возраст)<span class="req">*</span></label>
+                    <input type="text" id="child_${i}" class="child-input" placeholder="Например: Маша, 5 лет" required autocomplete="off">
+                `;
+                childrenInputsContainer.appendChild(row);
+                const childInp = document.getElementById(`child_${i}`);
+                childInp.addEventListener("input", function() {
+                    this.value = this.value.replace(/(^|\s)([a-zа-яё])/g, (m, s, c) => s + c.toUpperCase());
+                });
+            }
+        }
+
+        familySelect.addEventListener("change", function() {
+            const val = this.value;
+            if (val === "В браке (есть дети)" || val === "Один/одна воспитываю детей") {
+                childrenSection.classList.add("visible");
+                renderChildrenInputs(parseInt(childrenCountSelect.value, 10));
+            } else {
+                childrenSection.classList.remove("visible");
+                childrenInputsContainer.innerHTML = "";
+            }
+        });
+
+        childrenCountSelect.addEventListener("change", function() {
+            renderChildrenInputs(parseInt(this.value, 10));
+        });
+
+        // Обновление прогресс-бара
+        function updateProgress() {
+            const percent = Math.round(((currentStep - 1) / (totalSteps - 1)) * 100);
+            document.getElementById("stepCounterText").textContent = `Шаг ${currentStep} из ${totalSteps}`;
+            document.getElementById("stepPercentText").textContent = `${percent}%`;
+            document.getElementById("progressFill").style.width = `${percent}%`;
+        }
+
+        function showStep(stepNumber) {
+            errorMsg.style.display = "none";
+            steps.forEach(s => s.classList.remove("active"));
+            document.querySelector(`.survey-step[data-step="${stepNumber}"]`).classList.add("active");
+            currentStep = stepNumber;
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        // Проверка всех полей и форматов на текущем шаге
+        function validateCurrentStep() {
+            const activeStepEl = document.querySelector(`.survey-step[data-step="${currentStep}"]`);
+            const requiredInputs = activeStepEl.querySelectorAll("[required]");
+            let isValid = true;
+            let customError = "Пожалуйста, заполните все обязательные поля (*) на этом шаге.";
+
+            requiredInputs.forEach(input => {
+                if (input.type === "radio") {
+                    const groupName = input.name;
+                    const checked = activeStepEl.querySelector(`input[name="${groupName}"]:checked`);
+                    if (!checked) isValid = false;
+                } else {
+                    if (!input.value.trim()) {
+                        isValid = false;
+                        input.style.borderColor = "#ff4d4d";
+                    } else {
+                        input.style.borderColor = "";
+                    }
+                }
+            });
+
+            if (currentStep === 1 && isValid) {
+                const parsedDob = parseAndValidateDob(dobInput.value.trim());
+                if (!parsedDob) {
+                    isValid = false;
+                    dobInput.style.borderColor = "#ff4d4d";
+                    customError = "Введите корректную дату рождения в формате ДД.ММ.ГГГГ (например: 15.05.1995).";
+                } else {
+                    dobInput.style.borderColor = "";
+                }
+            }
+
+            if (currentStep === 2 && isValid) {
+                const mainPhoneDigits = document.getElementById("q_phone").value.replace(/\D/g, "");
+                if (mainPhoneDigits.length !== 11) {
+                    isValid = false;
+                    document.getElementById("q_phone").style.borderColor = "#ff4d4d";
+                    customError = "Введите полный основной номер телефона из 10 цифр после +7.";
+                }
+
+                if (isValid && document.getElementById("box_tg").classList.contains("visible")) {
+                    if (!/^@[a-zA-Z0-9_]{4,32}$/.test(tgInput.value.trim())) {
+                        isValid = false;
+                        tgInput.style.borderColor = "#ff4d4d";
+                        customError = "Неверный формат Telegram (минимум 4 символа после @, латиница или цифры).";
+                    }
+                }
+
+                if (isValid && document.getElementById("box_max").classList.contains("visible")) {
+                    if (maxInput.value.trim().length < 3) {
+                        isValid = false;
+                        maxInput.style.borderColor = "#ff4d4d";
+                        customError = "Укажите корректный ID или контакт в МАКС (минимум 3 символа).";
+                    }
+                }
+
+                if (isValid && document.getElementById("box_wa").classList.contains("visible")) {
+                    const waDigits = document.getElementById("inp_wa").value.replace(/\D/g, "");
+                    if (waDigits.length !== 11) {
+                        isValid = false;
+                        document.getElementById("inp_wa").style.borderColor = "#ff4d4d";
+                        customError = "Введите полный номер WhatsApp из 10 цифр после +7.";
+                    }
+                }
+
+                if (isValid && document.getElementById("box_email").classList.contains("visible")) {
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailInput.value.trim())) {
+                        isValid = false;
+                        emailInput.style.borderColor = "#ff4d4d";
+                        customError = "Неверный формат электронной почты (пример: name@mail.ru).";
+                    }
+                }
+
+                if (isValid && document.getElementById("box_vk").classList.contains("visible")) {
+                    const vkVal = vkInput.value.trim();
+                    if (!/^(https?:\/\/)?(vk\.com\/|m\.vk\.com\/)?@?[a-zA-Z0-9_.]{3,}$/i.test(vkVal)) {
+                        isValid = false;
+                        vkInput.style.borderColor = "#ff4d4d";
+                        customError = "Укажите корректную ссылку или ID ВКонтакте (например: vk.com/id12345).";
+                    }
+                }
+            }
+
+            if (currentStep === 3 && isValid) {
+                const licChoice = activeStepEl.querySelector('input[name="q_license"]:checked');
+                if (licChoice && licChoice.value === "Есть") {
+                    const checkedCats = activeStepEl.querySelectorAll('input[name="q_lic_cat"]:checked');
+                    if (checkedCats.length === 0) {
+                        isValid = false;
+                        customError = "Выберите хотя бы одну категорию водительских прав.";
+                    }
+                }
+
+                if (isValid) {
+                    const checkedDirections = activeStepEl.querySelectorAll('input[name="q_directions"]:checked');
+                    if (checkedDirections.length === 0) {
+                        isValid = false;
+                        customError = "Выберите хотя бы одно направление волонтёрской деятельности.";
+                    }
+                }
+            }
+
+            errorMsg.textContent = customError;
+            errorMsg.style.display = isValid ? "none" : "block";
+            return isValid;
+        }
+
+        document.querySelectorAll(".next-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                if (validateCurrentStep() && currentStep < totalSteps) {
+                    showStep(currentStep + 1);
+                }
+            });
+        });
+
+        document.querySelectorAll(".prev-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                if (currentStep > 1) {
+                    showStep(currentStep - 1);
+                }
+            });
+        });
+
+        // Финальная сборка ссылки для Яндекс Форм и запуск таймера
+        document.getElementById("fullSurveyForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            if (!validateCurrentStep()) return;
+
+            const params = new URLSearchParams();
+
+            const addParam = (key, value) => {
+                if (value && value.toString().trim() !== "" && FIELD_IDS[key]) {
+                    params.append(FIELD_IDS[key], value.toString().trim());
+                }
+            };
+
+            addParam("fio", document.getElementById("q_fio").value);
+            addParam("callsign", document.getElementById("q_callsign").value);
+
+            const parsedDob = parseAndValidateDob(dobInput.value.trim());
+            if (parsedDob) {
+                addParam("dob", parsedDob.isoDate);
+            }
+
+            addParam("education", document.getElementById("q_education").value);
+
+            // Занятость с развилкой: заведение спрашиваем только у тех, кто учится
+            const employmentValue = employmentSelect.value;
+            if (employmentValue === "Учусь") {
+                addParam("employment", "Учусь");
+                addParam("study", studyInput.value);
+            } else if (employmentValue === "Работаю") {
+                addParam("employment", "Работаю");
+                addParam("workSphere", workInput.value);
+            } else if (employmentValue === "Не работаю (безработный)") {
+                addParam("employment", "Не работаю (безработный)");
+            }
+
+            addParam("city", document.getElementById("q_city").value);
+            addParam("family", familySelect.value);
+
+            if (childrenSection.classList.contains("visible")) {
+                const count = childrenCountSelect.value;
+                const childInputs = document.querySelectorAll(".child-input");
+                const childrenList = Array.from(childInputs).map((inp, idx) => `№${idx + 1}: ${inp.value.trim()}`);
+                addParam("children", `Количество: ${count}. ${childrenList.join("; ")}`);
+            }
+
+            addParam("phone", document.getElementById("q_phone").value);
+
+            const activeChannels = [];
+            if (document.getElementById("box_tg").classList.contains("visible")) {
+                activeChannels.push(`Telegram: ${tgInput.value.trim()}`);
+            }
+            if (document.getElementById("box_max").classList.contains("visible")) {
+                activeChannels.push(`МАКС: ${maxInput.value.trim()}`);
+            }
+            if (document.getElementById("box_wa").classList.contains("visible")) {
+                activeChannels.push(`WhatsApp: ${document.getElementById("inp_wa").value.trim()}`);
+            }
+            if (document.getElementById("box_email").classList.contains("visible")) {
+                activeChannels.push(`Email: ${emailInput.value.trim()}`);
+            }
+            if (document.getElementById("box_vk").classList.contains("visible")) {
+                activeChannels.push(`ВК: ${vkInput.value.trim()}`);
+            }
+            if (activeChannels.length > 0) {
+                addParam("extraChannels", activeChannels.join(" | "));
+            }
+
+            addParam("contactPref", document.getElementById("q_contactPref").value);
+
+            const licChecked = document.querySelector('input[name="q_license"]:checked');
+            if (licChecked) {
+                if (licChecked.value === "Нет") {
+                    addParam("license", "Права отсутствуют");
+                } else {
+                    const cats = Array.from(document.querySelectorAll('input[name="q_lic_cat"]:checked')).map(c => c.value);
+                    addParam("license", `Есть (категории: ${cats.join(", ")})`);
+                }
+            }
+
+            const expChecked = document.querySelector('input[name="q_exp"]:checked');
+            if (expChecked) addParam("exp", expChecked.value);
+
+            addParam("hours", document.getElementById("q_hours").value);
+
+            const spheresChecked = document.querySelectorAll('input[name="q_spheres"]:checked');
+            if (spheresChecked.length > 0) {
+                const spheresText = Array.from(spheresChecked).map(cb => cb.value).join(", ");
+                addParam("spheres", spheresText);
+            }
+
+            // Направление волонтёрской деятельности
+            const directionsChecked = document.querySelectorAll('input[name="q_directions"]:checked');
+            if (directionsChecked.length > 0) {
+                const directionsText = Array.from(directionsChecked).map(cb => cb.value).join(", ");
+                addParam("directions", directionsText);
+            }
+
+            addParam("hobbies", document.getElementById("q_hobbies").value);
+
+            // Сильные стороны: чекбоксы и «свое» уходят в разные вопросы формы
+            const strengthsChecked = document.querySelectorAll('input[name="q_strengths"]:checked');
+            if (strengthsChecked.length > 0) {
+                const strengthsText = Array.from(strengthsChecked).map(cb => cb.value).join(", ");
+                addParam("strengths", strengthsText);
+            }
+            addParam("strengthsOther", document.getElementById("inp_strengths_other").value);
+
+            const informalChecked = document.querySelector('input[name="q_informal"]:checked');
+            if (informalChecked) addParam("informal", informalChecked.value);
+
+            addParam("skills", document.getElementById("q_skills").value);
+            addParam("motivation", document.getElementById("q_motivation").value);
+
+            addParam("likes", document.getElementById("q_likes").value);
+            addParam("help", document.getElementById("q_help").value);
+
+            const dobroChecked = document.querySelector('input[name="q_dobro"]:checked');
+            if (dobroChecked) addParam("dobro", dobroChecked.value);
+
+            addParam("source", document.getElementById("q_source").value);
+            addParam("comment", document.getElementById("q_comment").value);
+
+            targetLink = `${FORM_URL}?${params.toString()}`;
+
+            document.getElementById("fullSurveyForm").style.display = "none";
+            document.getElementById("progressArea").style.display = "none";
+            document.getElementById("confirmStep").style.display = "block";
+
+            let seconds = 5;
+            const finalBtn = document.getElementById("finalBtn");
+
+            const timer = setInterval(() => {
+                seconds--;
+                if (seconds > 0) {
+                    finalBtn.textContent = `Подождите ${seconds} сек...`;
+                } else {
+                    clearInterval(timer);
+                    finalBtn.disabled = false;
+                    finalBtn.textContent = "Перейти и отправить";
+                }
+            }, 1000);
+        });
+
+        document.getElementById("finalBtn").onclick = function() {
+            if (targetLink) {
+                window.location.href = targetLink;
+            }
+        };
+    </script>
+
+</body>
+</html>
